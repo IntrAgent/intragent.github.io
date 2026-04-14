@@ -452,6 +452,61 @@
       flex: 0 0 auto;
     }
 
+    .metric-band {
+      margin: 18px 0;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfcfa 0%, #eff5f0 100%);
+      padding: 16px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 14px 10px;
+      text-align: center;
+      min-height: 108px;
+    }
+
+    .metric-model {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      min-height: 32px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .metric-value {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1.05;
+    }
+
+    .metric-arrow {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 8px solid #2b8a4b;
+      transform: translateY(-1px);
+    }
+
     .footer {
       max-width: var(--max);
       margin: 16px auto 0;
@@ -467,7 +522,8 @@
 
       .two-col,
       .meta,
-      .resource-grid {
+      .resource-grid,
+      .metric-grid {
         grid-template-columns: 1fr;
       }
 
@@ -494,7 +550,7 @@
     <div class="nav-inner">
       <div class="nav-title">IntrAgent Project Page</div>
       <nav class="nav-links" aria-label="Primary">
-        <a href="#abstract">Abstract</a>
+        <a href="#abstract">Key Contributions</a>
         <a href="#task">IntraView</a>
         <a href="#method">IntrAgent</a>
         <a href="#benchmark">IntraBench</a>
@@ -549,17 +605,10 @@
       </header>
 
       <section id="abstract">
-        <h2>Abstract</h2>
-        <p>
-          Scientific research often depends on accurately extracting metadata, experimental setups, measurements, and conclusions from prior literature. This paper introduces <strong>IntraView</strong>, a new task for content-grounded information retrieval from a provided scientific paper, and proposes <strong>IntrAgent</strong>, an LLM-based agent designed to solve it faithfully.
-        </p>
-        <p>
-          IntrAgent mimics human literature reading with a two-stage pipeline: it first ranks paper sections through structure-aware reasoning, then performs iterative reading with an explicit sufficiency check to decide whether additional evidence is needed. To evaluate this setting, the paper presents <strong>IntraBench</strong>, a benchmark of 315 instances across five STEM domains. Across seven backbone LLMs, IntrAgent improves average cross-domain accuracy by <strong>13.2%</strong> over state-of-the-art RAG and literature-agent baselines.
-        </p>
-      </section>
-
-      <section>
         <h2>Key Contributions</h2>
+        <p>
+          IntrAgent introduces <strong>IntraView</strong>, a new task for content-grounded information retrieval from a provided scientific paper, and proposes an LLM agent that mimics human literature reading through structure-aware section ranking and iterative evidence gathering. To evaluate this setting, the work presents <strong>IntraBench</strong>, a 315-instance benchmark across five STEM domains on which IntrAgent improves average cross-domain accuracy by <strong>13.2%</strong> over strong RAG and literature-agent baselines.
+        </p>
         <ul>
           <li>Defines <strong>IntraView</strong>, a new task for faithful information retrieval from a provided scientific paper rather than from external search.</li>
           <li>Introduces <strong>IntrAgent</strong>, a specialized LLM agent that follows a human-like workflow: identify promising sections, extract evidence, and stop when support is sufficient.</li>
@@ -728,6 +777,38 @@
         <p>
           The experiments compare IntrAgent against a broad set of RAG-based retrieval systems and literature-oriented agents, including vanilla RAG variants, contextual RAG, DRAGIN, R2AG, LongRAG, LUMOS, PaperQA2, Agentic-Hybrid-RAG, and SciMaster.
         </p>
+        <div class="metric-band">
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-model">GPT-4o</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>70.0%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">GPT-4.1</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>75.8%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">DeepSeek-R1</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>74.4%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">o3</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>73.4%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">o4-mini</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>73.8%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">Gemini-2.5 Pro</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>75.9%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-model">Llama-3.1-70B</div>
+              <div class="metric-value"><span class="metric-arrow" aria-hidden="true"></span>68.8%</div>
+            </div>
+          </div>
+        </div>
         <p>
           On IntraBench, IntrAgent sets a new state of the art across all five domains and seven backbone LLMs. Reported average accuracies include <strong>70.0%</strong> with GPT-4o, <strong>75.8%</strong> with GPT-4.1, <strong>74.4%</strong> with DeepSeek-R1, <strong>73.4%</strong> with o3, <strong>73.8%</strong> with o4-mini, <strong>75.9%</strong> with Gemini-2.5 Pro, and <strong>68.8%</strong> with Llama-3.1-70B.
         </p>
@@ -955,12 +1036,11 @@
 
       <section id="citation">
         <h2>Citation</h2>
-        <pre>@misc{ma2026intragent,
-  title        = {IntrAgent: An LLM Agent for Content-Grounded Information Retrieval through Literature Review},
-  author       = {Fengbo Ma and Zixin Rao and Xiaoting Li and Zhetao Chen and Hongyue Sun and Yiping Zhao and Xianyan Chen and Zhen Xiang},
-  year         = {2026},
-  institution  = {University of Georgia},
-  note         = {Manuscript and project page}
+        <pre>@inproceedings{ma2026intragent,
+  title={IntrAgent: An {LLM} Agent for Content-Grounded Information Retrieval through Literature Review},
+  author={Fengbo Ma and Zixin Rao and Xiaoting Li and Zhetao Chen and Hongyue Sun and Xianyan Chen and Yiping Zhao and Zhen Xiang},
+  booktitle={The 64th Annual Meeting of the Association for Computational Linguistics},
+  year={2026},
 }</pre>
       </section>
     </article>
