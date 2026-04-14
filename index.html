@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntrAgent: An LLM Agent for Content-Grounded Information Retrieval through Literature Review</title>
+  <style>
+    :root {
+      --paper: #ffffff;
+      --page: #f3f5f1;
+      --ink: #111913;
+      --muted: #556057;
+      --line: #d8e0d7;
+      --green: #174c38;
+      --green-soft: #edf3ef;
+      --max: 920px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--page);
+      color: var(--ink);
+      line-height: 1.62;
+    }
+
+    a {
+      color: var(--green);
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(243, 245, 241, 0.96);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      width: min(calc(100% - 24px), 1100px);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+    }
+
+    .nav-title {
+      font-size: 0.88rem;
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.94rem;
+      padding: 4px 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--green);
+    }
+
+    .page {
+      width: min(calc(100% - 24px), 1100px);
+      margin: 24px auto 48px;
+    }
+
+    .paper {
+      max-width: var(--max);
+      margin: 0 auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 28px rgba(10, 23, 15, 0.05);
+      padding: 36px 42px 42px;
+    }
+
+    .hero {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+      margin-bottom: 28px;
+    }
+
+    .kicker {
+      margin: 0 0 12px;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 4.2vw, 2.7rem);
+      line-height: 1.18;
+      font-weight: 700;
+      color: #0f2018;
+    }
+
+    .authors {
+      margin-top: 14px;
+      font-size: 1rem;
+      color: #243128;
+    }
+
+    .affiliation,
+    .notes {
+      font-size: 0.95rem;
+    }
+
+    .affiliation {
+      margin-top: 8px;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .notes {
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      background: var(--green-soft);
+      color: var(--green);
+      text-decoration: none;
+      font-size: 0.94rem;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      background: #e3eee7;
+    }
+
+    .button svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .meta-item {
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      background: #fafcf9;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: var(--green);
+      margin-bottom: 4px;
+      font-size: 1.15rem;
+    }
+
+    section {
+      margin-top: 26px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.3rem;
+      color: var(--green);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 1.03rem;
+      color: #1d2f24;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 12px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    figure {
+      margin: 18px 0 0;
+      border: 1px solid var(--line);
+      background: #fafcf9;
+      padding: 12px;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid #e6ece6;
+      background: #fff;
+    }
+
+    figcaption {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .plain-box {
+      border: 1px solid var(--line);
+      background: #fafcf9;
+      padding: 16px;
+    }
+
+    details.disclosure {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      background: #fafcf9;
+    }
+
+    details.disclosure summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 14px 16px;
+      font-weight: 700;
+      color: var(--green);
+      user-select: none;
+    }
+
+    details.disclosure summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.disclosure summary::before {
+      content: "+";
+      display: inline-block;
+      width: 16px;
+      margin-right: 8px;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    details.disclosure[open] summary::before {
+      content: "−";
+    }
+
+    .disclosure-body {
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .disclosure-body p:first-child {
+      margin-top: 14px;
+    }
+
+    .domain-list span {
+      display: inline-block;
+      margin: 6px 6px 0 0;
+      padding: 5px 10px;
+      background: var(--green-soft);
+      border: 1px solid var(--line);
+      color: var(--green);
+      font-size: 0.9rem;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      background: #f6f8f5;
+      border: 1px solid var(--line);
+      padding: 14px;
+      overflow-x: auto;
+    }
+
+    .table-wrap {
+      margin-top: 18px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: #fafcf9;
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e3e9e3;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th:first-child,
+    td:first-child,
+    th:nth-child(2),
+    td:nth-child(2) {
+      text-align: left;
+    }
+
+    thead th {
+      background: #f3f7f3;
+      color: #1a2a20;
+      font-weight: 700;
+    }
+
+    tbody tr.section-break td {
+      border-top: 2px solid #cfd8cf;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .ours-row td {
+      font-weight: 700;
+      background: #f2f7f3;
+    }
+
+    .table-caption {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .paper-table table {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .paper-table th,
+    .paper-table td {
+      text-align: left;
+    }
+
+    .paper-group td {
+      background: #f1f6f1;
+      color: #193325;
+      font-weight: 700;
+      border-top: 2px solid #cfd8cf;
+    }
+
+    .resource-panel {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfcfa 0%, #f2f6f2 100%);
+      padding: 18px;
+    }
+
+    .resource-intro {
+      margin-bottom: 14px;
+      color: var(--muted);
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .resource-card {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 16px;
+    }
+
+    .resource-card h3 {
+      margin: 0 0 6px;
+    }
+
+    .resource-copy {
+      min-height: 52px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .resource-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: var(--green-soft);
+      color: var(--green);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .resource-link:hover {
+      background: #e3eee7;
+    }
+
+    .resource-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .footer {
+      max-width: var(--max);
+      margin: 16px auto 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 840px) {
+      .paper {
+        padding: 24px;
+      }
+
+      .two-col,
+      .meta,
+      .resource-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .page,
+      .nav-inner {
+        width: min(calc(100% - 16px), 1100px);
+      }
+
+      .paper {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="nav-title">IntrAgent Project Page</div>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#abstract">Abstract</a>
+        <a href="#task">IntraView</a>
+        <a href="#method">IntrAgent</a>
+        <a href="#benchmark">IntraBench</a>
+        <a href="#experiments">Experiments</a>
+        <a href="#citation">Citation</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page">
+    <article class="paper">
+      <header class="hero">
+        <p class="kicker">Academic Project Website</p>
+        <h1>IntrAgent: An LLM Agent for Content-Grounded Information Retrieval through Literature Review</h1>
+        <div class="authors">
+          Fengbo Ma, Zixin Rao, Xiaoting Li, Zhetao Chen, Hongyue Sun, Yiping Zhao, Xianyan Chen, Zhen Xiang
+        </div>
+        <div class="affiliation">University of Georgia, Athens, GA, USA</div>
+        <div class="notes">Equal contribution: Fengbo Ma and Zixin Rao. Corresponding authors: Xianyan Chen and Zhen Xiang.</div>
+        <div class="actions">
+          <a class="button" href="#">Paper placeholder</a>
+          <a class="button" href="https://github.com/FengboMa/IntrAgent" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 4.84c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+            </svg>
+            GitHub
+          </a>
+          <a class="button" href="https://huggingface.co/datasets/IntrAgent/IntraBench" target="_blank" rel="noopener noreferrer" aria-label="Hugging Face dataset">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="9" cy="11" r="1.2" fill="#ffffff"></circle>
+              <circle cx="15" cy="11" r="1.2" fill="#ffffff"></circle>
+              <path d="M8.2 14.2c.9 1.4 2.2 2.1 3.8 2.1s2.9-.7 3.8-2.1" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+            Hugging Face
+          </a>
+        </div>
+        <div class="meta">
+          <div class="meta-item">
+            <strong>13.2%</strong>
+            Average cross-domain accuracy improvement over strong RAG and agent baselines.
+          </div>
+          <div class="meta-item">
+            <strong>315</strong>
+            Expert-authored benchmark instances for literature-grounded retrieval.
+          </div>
+          <div class="meta-item">
+            <strong>5 Domains</strong>
+            Physics, earth science, public health, engineering, and material science.
+          </div>
+        </div>
+      </header>
+
+      <section id="abstract">
+        <h2>Abstract</h2>
+        <p>
+          Scientific research often depends on accurately extracting metadata, experimental setups, measurements, and conclusions from prior literature. This paper introduces <strong>IntraView</strong>, a new task for content-grounded information retrieval from a provided scientific paper, and proposes <strong>IntrAgent</strong>, an LLM-based agent designed to solve it faithfully.
+        </p>
+        <p>
+          IntrAgent mimics human literature reading with a two-stage pipeline: it first ranks paper sections through structure-aware reasoning, then performs iterative reading with an explicit sufficiency check to decide whether additional evidence is needed. To evaluate this setting, the paper presents <strong>IntraBench</strong>, a benchmark of 315 instances across five STEM domains. Across seven backbone LLMs, IntrAgent improves average cross-domain accuracy by <strong>13.2%</strong> over state-of-the-art RAG and literature-agent baselines.
+        </p>
+      </section>
+
+      <section>
+        <h2>Key Contributions</h2>
+        <ul>
+          <li>Defines <strong>IntraView</strong>, a new task for faithful information retrieval from a provided scientific paper rather than from external search.</li>
+          <li>Introduces <strong>IntrAgent</strong>, a specialized LLM agent that follows a human-like workflow: identify promising sections, extract evidence, and stop when support is sufficient.</li>
+          <li>Develops two core mechanisms for the task: <strong>hierarchy-preserving section ranking</strong> and <strong>iterative reading with information sufficiency checking</strong>.</li>
+          <li>Builds <strong>IntraBench</strong>, the first benchmark for this setting, covering 315 instances across five impactful STEM domains.</li>
+        </ul>
+      </section>
+
+      <section id="task">
+        <h2>IntraView Task</h2>
+        <p>
+          IntraView is formulated as a content question answering problem over a full scientific paper. Given a literature document <em>C</em> and a research-driven query <em>Q</em>, the system must return an answer <em>A</em> that is accurate, concise, and explicitly grounded in the provided paper.
+        </p>
+        <p>
+          Compared with standard content QA, the task is harder because scientific papers are long, structurally complex, and filled with domain-specific terminology. The relevant evidence may appear anywhere in the document, may require cross-referencing multiple sections, and may sometimes be absent entirely, making hallucination control central to the task.
+        </p>
+      </section>
+
+      <section id="method">
+        <h2>IntrAgent Method</h2>
+        <div class="two-col">
+          <div>
+            <h3>Stage 1: Section Ranking</h3>
+            <p>
+              IntrAgent first parses section titles and preserves the paper hierarchy so the model can reason over the document as a structured artifact rather than a flat list of chunks. The LLM then ranks sections by likely relevance to the question, producing a reordered reading path.
+            </p>
+            <p>
+              This hierarchy-aware step is designed to better align scientific questions with the parts of a paper most likely to contain supporting evidence.
+            </p>
+          </div>
+          <div>
+            <h3>Stage 2: Iterative Reading</h3>
+            <p>
+              The agent reads the ranked sections sequentially, extracts anchored details such as terminology, measurements, results, and comparisons, and stores them in short-term memory for answer synthesis.
+            </p>
+            <p>
+              After each reading step, IntrAgent performs an explicit <strong>information sufficiency check</strong>. If the evidence is still incomplete, it continues reading; otherwise it stops and synthesizes a grounded answer.
+            </p>
+          </div>
+        </div>
+
+        <figure>
+          <img src="element/pipeline.png" alt="IntrAgent pipeline diagram">
+          <figcaption>
+            Figure 1: Overview of the IntrAgent pipeline containing two stages: Section Ranking (top) reorders the paper’s sections by relevance to the Research Question Q, while Iterative Reading (bottom) steps through ranked sections, extracting information until gathered information is sufficient.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="benchmark">
+        <h2>IntraBench Benchmark</h2>
+        <p>
+          To evaluate IntraView, the paper introduces <strong>IntraBench</strong>, the first benchmark specifically designed for literature-grounded information retrieval. It contains <strong>315 test instances</strong> derived from expert-authored questions paired with research papers.
+        </p>
+        <p>
+          The benchmark spans five high-impact domains and is intended to capture technical depth, conceptual complexity, and domain-specific phrasing encountered in real literature review workflows.
+        </p>
+        <div class="domain-list">
+          <span>Physics</span>
+          <span>Earth Science</span>
+          <span>Public Health</span>
+          <span>Engineering</span>
+          <span>Material Science</span>
+        </div>
+        <div class="plain-box" style="margin-top: 16px;">
+          Questions are organized around four research-oriented categories described in the paper: study subject and experimental setup, data characteristics and collection, technical approach and details, and conclusions and results. Evaluation is performed through LLM-grounded multiple-choice mapping to handle synonyms, abbreviations, and scientific terminology variation.
+        </div>
+
+        <figure>
+          <img src="element/example.png" alt="Example comparing RAG and IntrAgent on a paper question">
+          <figcaption>
+            Figure 2: An example of IntrAgent executing a question-paper pair from IntraBench. For an input question Q regarding paper C, vanilla RAG fails to extract the correct chunk, resulting in an incorrect answer. In contrast, IntrAgent ranks the sections through reasoning and retrieves the correct details that pass the sufficiency check in the first iteration, leading to a correct answer. Details for section ranking and sufficiency check are also presented.
+          </figcaption>
+        </figure>
+
+        <details class="disclosure">
+          <summary>Benchmark Construction and Evaluation</summary>
+          <div class="disclosure-body">
+            <p>
+              <strong>LLM-Grounded Multiple-Choice Evaluation.</strong> The paper argues that scientific answers are difficult to score with surface-form metrics because abbreviations, synonyms, and domain-specific expressions may all refer to the same concept, while numerical and factual outputs require exact semantic correctness. To address this, IntraBench uses multiple-choice answer sets during evaluation, while the tested systems still produce short free-form answers.
+            </p>
+            <p>
+              An LLM then maps each generated answer to the most relevant choice. This mapping helps normalize terminology variation and avoids brittle string matching. Each question includes one correct answer plus five distractors, and the options consistently include <strong>“All of the above”</strong> and <strong>“None of the above”</strong>, either of which may be correct when warranted by the paper content.
+            </p>
+            <p>
+              <strong>Construction of IntraBench Dataset.</strong> The benchmark is built by first selecting representative scientific literature, then manually crafting expert-level questions across four task categories: study subject and experimental setup, data characteristics and collection, technical approach and details, and conclusions and results. For each domain, an expert first curates a broader familiar paper pool, then five papers are randomly chosen from that pool. The selected papers are limited to impactful, peer-reviewed journals to ensure authority and reliable annotation.
+            </p>
+            <p>
+              Answer choices are created by domain experts using one correct option and distractors constructed from similar concepts, numerical values, or commonly used conventions in the field. This design supports robust evaluation while keeping the benchmark closely aligned with real literature-review practice.
+            </p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Research Fields in IntraBench</summary>
+          <div class="disclosure-body">
+            <p>
+              <strong>Public Health: Infectious-disease Modeling.</strong> This field uses mathematical epidemic models such as SIR and SEIR to forecast spread, assess interventions, and support public-health decision making. In the benchmark, it emphasizes compartmental assumptions, intervention parameters, and outcome interpretation in disease-transmission studies.
+            </p>
+            <p>
+              <strong>Physics: Surface Enhanced Raman Spectroscopy.</strong> SERS extends Raman spectroscopy by amplifying molecular signals on nanostructured metallic surfaces, enabling highly sensitive detection down to trace or even single-molecule levels. The benchmark reflects typical SERS workflows spanning substrate behavior, sensing conditions, and data-driven analysis.
+            </p>
+            <p>
+              <strong>Earth Science: Remote Sensing.</strong> Remote sensing focuses on land-cover and land-use classification from multi-source imagery such as optical satellites and synthetic aperture radar. The benchmark highlights data characteristics like sensor type, spatial resolution, temporal coverage, and mapping methodology for urban and environmental monitoring.
+            </p>
+            <p>
+              <strong>Engineering: Human Factor.</strong> Human factors research studies systems that balance human well-being and overall system performance, especially under fatigue, workload, and sensing constraints. The benchmark emphasizes multimodal sensing setups, ergonomic risk, and human-performance measurement across industrial settings.
+            </p>
+            <p>
+              <strong>Material Science: Additive Manufacturing.</strong> Additive manufacturing builds components layer by layer from digital designs, with quality control and defect detection as central challenges. The benchmark centers on process monitoring, anomaly detection, and machine-learning-based evaluation of material-process-defect relationships.
+            </p>
+            <div class="table-wrap paper-table">
+              <table aria-label="Benchmark paper titles">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="paper-group"><td>Public Health - Infectious-disease Modeling</td></tr>
+                  <tr><td>Mathematical modeling and analysis of COVID-19: A study of new variant Omicron</td></tr>
+                  <tr><td>COVID-19 pandemic in India: a mathematical model study</td></tr>
+                  <tr><td>A mathematical COVID-19 model considering asymptomatic and symptomatic classes with waning immunity</td></tr>
+                  <tr><td>Mathematical modeling and analysis of COVID-19 pandemic in Nigeria</td></tr>
+                  <tr><td>Mathematical modeling of COVID-19 transmission dynamics with a case study of Wuhan</td></tr>
+
+                  <tr class="paper-group"><td>Physics - Surface Enhanced Raman Spectroscopy</td></tr>
+                  <tr><td>Quantification of Analyte Concentration in the Single Molecule Regime Using Convolutional Neural Networks</td></tr>
+                  <tr><td>Machine learning enabled multiplex detection of periodontal pathogens by surface-enhanced Raman spectroscopy</td></tr>
+                  <tr><td>Rapid Detection of SARS-CoV-2 Variants Using an Angiotensin-Converting Enzyme 2-Based Surface-Enhanced Raman Spectroscopy Sensor Enhanced by CoVari Deep Learning Algorithms</td></tr>
+                  <tr><td>Rapid Detection of SARS-CoV-2 RNA in Human Nasopharyngeal Specimens Using Surface-Enhanced Raman Spectroscopy and Deep Learning Algorithms</td></tr>
+                  <tr><td>Quantitative detection of α1-acid glycoprotein (AGP) level in blood plasma using SERS and CNN transfer learning approach</td></tr>
+
+                  <tr class="paper-group"><td>Earth Science - Remote Sensing</td></tr>
+                  <tr><td>Annual maps of global artificial impervious area (GAIA) between 1985 and 2018</td></tr>
+                  <tr><td>Annual dynamics of global land cover and its long-term changes from 1982 to 2015</td></tr>
+                  <tr><td>Finer resolution observation and monitoring of global land cover: first mapping results with Landsat TM and ETM+ data</td></tr>
+                  <tr><td>Mapping Essential Urban Land Use Categories in Beijing with a Fast Area of Interest (AOI)-Based Method</td></tr>
+                  <tr><td>Mapping essential urban land use categories in China (EULUC-China): preliminary results for 2018</td></tr>
+
+                  <tr class="paper-group"><td>Engineering - Human Factor</td></tr>
+                  <tr><td>A data analytic end-to-end framework for the automated quantification of ergonomic risk factors across multiple tasks using a single wearable sensor</td></tr>
+                  <tr><td>Assessing human situation awareness reliability considering fatigue and mood using EEG data: A Bayesian neural network-Bayesian network approach</td></tr>
+                  <tr><td>Automatic driver cognitive fatigue detection based on upper body posture variations</td></tr>
+                  <tr><td>Enhancing Data Privacy in Human Factors Studies with Federated Learning</td></tr>
+                  <tr><td>Worker’s physical fatigue classification using neural networks</td></tr>
+
+                  <tr class="paper-group"><td>Material Science - Additive Manufacturing</td></tr>
+                  <tr><td>Autonomous optimization of process parameters and in-situ anomaly detection in aerosol jet printing by an integrated machine learning approach</td></tr>
+                  <tr><td>Geometrical defect detection for additive manufacturing with machine learning models</td></tr>
+                  <tr><td>Layer-Wise Modeling and Anomaly Detection for LaserBased Additive Manufacturing</td></tr>
+                  <tr><td>Online droplet anomaly detection from streaming videos in inkjet printing</td></tr>
+                  <tr><td>Toward the digital twin of additive manufacturing- Integrating thermal simulations, sensing, and analytics to detect process faults</td></tr>
+                </tbody>
+              </table>
+              <div class="table-caption">
+                Table. Benchmark papers across five scientific domains used in IntraBench.
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section id="experiments">
+        <h2>Experiments and Results</h2>
+        <p>
+          The experiments compare IntrAgent against a broad set of RAG-based retrieval systems and literature-oriented agents, including vanilla RAG variants, contextual RAG, DRAGIN, R2AG, LongRAG, LUMOS, PaperQA2, Agentic-Hybrid-RAG, and SciMaster.
+        </p>
+        <p>
+          On IntraBench, IntrAgent sets a new state of the art across all five domains and seven backbone LLMs. Reported average accuracies include <strong>70.0%</strong> with GPT-4o, <strong>75.8%</strong> with GPT-4.1, <strong>74.4%</strong> with DeepSeek-R1, <strong>73.4%</strong> with o3, <strong>73.8%</strong> with o4-mini, <strong>75.9%</strong> with Gemini-2.5 Pro, and <strong>68.8%</strong> with Llama-3.1-70B.
+        </p>
+        <p>
+          The paper attributes these gains to two main design choices: hierarchy-aware section ranking and the sufficiency check that stops reading once evidence is complete. In contrast, flat RAG pipelines often inject irrelevant chunks, while literature agents designed for online search degrade into static retrieval pipelines when constrained to a provided paper.
+        </p>
+
+        <div class="table-wrap">
+          <table aria-label="Cross-domain accuracy results table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Method</th>
+                <th>GPT-4o</th>
+                <th>GPT-4.1</th>
+                <th>DS-R1</th>
+                <th>o3</th>
+                <th>o4-mini</th>
+                <th>Gemini-2.5 Pro</th>
+                <th>Llama-3.1-70B</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>RAG</td>
+                <td>Vanilla RAG all-MiniLM-L6-v2</td>
+                <td>60.3</td>
+                <td>61.2</td>
+                <td>64.3</td>
+                <td>60.4</td>
+                <td>61.5</td>
+                <td>61.8</td>
+                <td>59.2</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Vanilla RAG E5-mistral-7b-instruct</td>
+                <td>59.4</td>
+                <td>64.2</td>
+                <td>63.8</td>
+                <td>60.3</td>
+                <td>61.4</td>
+                <td>59.9</td>
+                <td>60.5</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Vanilla RAG GritLM-7B</td>
+                <td>60.4</td>
+                <td>63.2</td>
+                <td>63.2</td>
+                <td>59.7</td>
+                <td>58.4</td>
+                <td>58.4</td>
+                <td>61.4</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Context. RAG E5-mistral-7b-instruct</td>
+                <td>60.7</td>
+                <td>63.8</td>
+                <td>62.8</td>
+                <td>59.1</td>
+                <td>58.3</td>
+                <td>58.9</td>
+                <td>58.9</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Context. RAG GritLM-7B</td>
+                <td>60.8</td>
+                <td>62.8</td>
+                <td>61.6</td>
+                <td>58.4</td>
+                <td>60.7</td>
+                <td>61.6</td>
+                <td>59.2</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>DRAGIN</td>
+                <td>42.5</td>
+                <td>44.6</td>
+                <td>46.9</td>
+                <td>44.0</td>
+                <td>46.9</td>
+                <td>45.9</td>
+                <td>45.4</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>R<sup>2</sup>AG</td>
+                <td>59.4</td>
+                <td>59.5</td>
+                <td>61.5</td>
+                <td>56.6</td>
+                <td>55.3</td>
+                <td>55.6</td>
+                <td>56.1</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>LongRAG</td>
+                <td>62.1</td>
+                <td>64.7</td>
+                <td>65.5</td>
+                <td>57.0</td>
+                <td>58.3</td>
+                <td>57.1</td>
+                <td>57.4</td>
+              </tr>
+              <tr class="section-break">
+                <td>Agent</td>
+                <td>LUMOS</td>
+                <td>50.2</td>
+                <td>52.1</td>
+                <td>55.4</td>
+                <td>55.2</td>
+                <td>56.4</td>
+                <td>54.9</td>
+                <td>54.4</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>PaperQA2</td>
+                <td>47.7</td>
+                <td>48.9</td>
+                <td>54.0</td>
+                <td>51.8</td>
+                <td>49.2</td>
+                <td>51.2</td>
+                <td>53.8</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Agentic-Hybrid-RAG</td>
+                <td>59.8</td>
+                <td>60.2</td>
+                <td>62.3</td>
+                <td>57.5</td>
+                <td>57.8</td>
+                <td>57.2</td>
+                <td>56.6</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>SciMaster</td>
+                <td>59.0</td>
+                <td>57.6</td>
+                <td>63.3</td>
+                <td>57.2</td>
+                <td>58.1</td>
+                <td>57.2</td>
+                <td>57.0</td>
+              </tr>
+              <tr class="ours-row">
+                <td></td>
+                <td>IntrAgent (Ours)</td>
+                <td>70.0</td>
+                <td>75.8</td>
+                <td>74.4</td>
+                <td>73.4</td>
+                <td>73.8</td>
+                <td>75.9</td>
+                <td>68.8</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-caption">
+            Table. Cross-domain accuracy (in %) defined by the macro average over the five domains on IntraBench. IntrAgent uniformly outperforms the RAG-based retrieval and agent-based baselines across seven model choices.
+          </div>
+        </div>
+
+        <h3>Ablation Findings</h3>
+        <ul>
+          <li>Removing <strong>hierarchy preservation</strong> causes a clear accuracy drop, confirming that structural context matters for section ranking.</li>
+          <li>The <strong>balanced</strong> reading mode is the default because aggressive reading lowers retrieval accuracy, while conservative reading increases overhead without improving outcomes.</li>
+          <li>Eliminating the <strong>information sufficiency check</strong> weakens the agent’s ability to stop at the right point and increases unsupported retrieval behavior.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Resources</h2>
+        <div class="resource-panel">
+          <p class="resource-intro">
+            Access the current project artifacts, implementation repository, and benchmark dataset from the links below.
+          </p>
+          <div class="resource-grid">
+            <div class="resource-card">
+              <h3>Paper</h3>
+              <p class="resource-copy">Manuscript link placeholder for the final ACL 2026 paper version.</p>
+              <a class="resource-link" href="#">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 2h8l4 4v16H6V2Zm8 1.5V7h3.5L14 3.5ZM8 10h8v1.5H8V10Zm0 4h8v1.5H8V14Zm0 4h6v1.5H8V18Z"></path>
+                </svg>
+                Paper placeholder
+              </a>
+            </div>
+            <div class="resource-card">
+              <h3>Code</h3>
+              <p class="resource-copy">Official GitHub repository containing the IntrAgent implementation and project materials.</p>
+              <a class="resource-link" href="https://github.com/FengboMa/IntrAgent" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 4.84c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+                </svg>
+                View on GitHub
+              </a>
+            </div>
+            <div class="resource-card">
+              <h3>Dataset</h3>
+              <p class="resource-copy">Hugging Face dataset page for IntraBench, including benchmark packaging and access details.</p>
+              <a class="resource-link" href="https://huggingface.co/datasets/IntrAgent/IntraBench" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <circle cx="9" cy="11" r="1.2" fill="#ffffff"></circle>
+                  <circle cx="15" cy="11" r="1.2" fill="#ffffff"></circle>
+                  <path d="M8.2 14.2c.9 1.4 2.2 2.1 3.8 2.1s2.9-.7 3.8-2.1" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+                View on Hugging Face
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="citation">
+        <h2>Citation</h2>
+        <pre>@misc{ma2026intragent,
+  title        = {IntrAgent: An LLM Agent for Content-Grounded Information Retrieval through Literature Review},
+  author       = {Fengbo Ma and Zixin Rao and Xiaoting Li and Zhetao Chen and Hongyue Sun and Yiping Zhao and Xianyan Chen and Zhen Xiang},
+  year         = {2026},
+  institution  = {University of Georgia},
+  note         = {Manuscript and project page}
+}</pre>
+      </section>
+    </article>
+
+    <div class="footer">
+      ACL 2026, IntrAgent: An LLM Agent for Content-Grounded Information Retrieval through Literature Review.
+    </div>
+  </div>
+</body>
+</html>

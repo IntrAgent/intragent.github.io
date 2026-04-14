@@ -1,0 +1,5 @@
+.DS_Store
+Thumbs.db
+
+# Local source PDFs used during page construction; the site uses PNG exports.
+element/*.pdf
