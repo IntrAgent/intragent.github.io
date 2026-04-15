@@ -606,14 +606,11 @@
 
       <section id="abstract">
         <h2>Key Contributions</h2>
-        <p>
-          IntrAgent introduces <strong>IntraView</strong>, a new task for content-grounded information retrieval from a provided scientific paper, and proposes an LLM agent that mimics human literature reading through structure-aware section ranking and iterative evidence gathering. To evaluate this setting, the work presents <strong>IntraBench</strong>, a 315-instance benchmark across five STEM domains on which IntrAgent improves average cross-domain accuracy by <strong>13.2%</strong> over strong RAG and literature-agent baselines.
-        </p>
         <ul>
-          <li>Defines <strong>IntraView</strong>, a new task for faithful information retrieval from a provided scientific paper rather than from external search.</li>
-          <li>Introduces <strong>IntrAgent</strong>, a specialized LLM agent that follows a human-like workflow: identify promising sections, extract evidence, and stop when support is sufficient.</li>
-          <li>Develops two core mechanisms for the task: <strong>hierarchy-preserving section ranking</strong> and <strong>iterative reading with information sufficiency checking</strong>.</li>
-          <li>Builds <strong>IntraBench</strong>, the first benchmark for this setting, covering 315 instances across five impactful STEM domains.</li>
+          <li>We introduce <strong>IntraView</strong>, a new task for content-grounded information retrieval from a provided scientific paper.</li>
+          <li>We propose <strong>IntrAgent</strong>, the first specialized LLM agent for IntraView that follows a human-like workflow: identify promising sections, extract evidence, and stop when support is sufficient.</li>
+          <li>We present <strong>IntraBench</strong>, a 315-instance benchmark across five STEM domains.</li>
+          <li>We demonstrate that <strong>IntrAgent</strong> improves average cross-domain accuracy by <strong>13.2%</strong> over strong RAG and literature-agent baselines.</li>
         </ul>
       </section>
 
@@ -661,7 +658,7 @@
       <section id="benchmark">
         <h2>IntraBench Benchmark</h2>
         <p>
-          To evaluate IntraView, the paper introduces <strong>IntraBench</strong>, the first benchmark specifically designed for literature-grounded information retrieval. It contains <strong>315 test instances</strong> derived from expert-authored questions paired with research papers.
+          To evaluate IntraView, we introduce <strong>IntraBench</strong>, the first benchmark specifically designed for literature-grounded information retrieval. It contains <strong>315 test instances</strong> derived from expert-authored questions paired with research papers.
         </p>
         <p>
           The benchmark spans five high-impact domains and is intended to capture technical depth, conceptual complexity, and domain-specific phrasing encountered in real literature review workflows.
@@ -676,13 +673,6 @@
         <div class="plain-box" style="margin-top: 16px;">
           Questions are organized around four research-oriented categories described in the paper: study subject and experimental setup, data characteristics and collection, technical approach and details, and conclusions and results. Evaluation is performed through LLM-grounded multiple-choice mapping to handle synonyms, abbreviations, and scientific terminology variation.
         </div>
-
-        <figure>
-          <img src="element/example.png" alt="Example comparing RAG and IntrAgent on a paper question">
-          <figcaption>
-            Figure 2: An example of IntrAgent executing a question-paper pair from IntraBench. For an input question Q regarding paper C, vanilla RAG fails to extract the correct chunk, resulting in an incorrect answer. In contrast, IntrAgent ranks the sections through reasoning and retrieves the correct details that pass the sufficiency check in the first iteration, leading to a correct answer. Details for section ranking and sufficiency check are also presented.
-          </figcaption>
-        </figure>
 
         <details class="disclosure">
           <summary>Benchmark Construction and Evaluation</summary>
